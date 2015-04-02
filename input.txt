@@ -1,1 +1,2 @@
 Domino: Extracting, Comparing, and Manipulating Subsets Across Multiple Tabular Datasets
+UpSet: Visualization of Intersecting Sets

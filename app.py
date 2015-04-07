@@ -72,6 +72,8 @@ def splitRefData(block):
             isLeft = False
 
         outString = outArray[0].get("string")
+        outString = re.sub("^\u201c", "", outString)
+        outString = re.sub("\u201d$", "", outString)
 
     dataObject['references'].append(outString)
 
@@ -92,8 +94,13 @@ for f in os.listdir(dirName):
 
     blockRef = soup.select("#references div.body")
     paperName = soup.select("#at-glance div.text h1")[0].text.replace(":", "").replace(",", "")
+
+    # title
     dataObject['title'] = paperName
     dataObject['references'] = []
+
+    # date
+    dataObject['date'] = re.sub("^\n", "", re.sub("\n$", "", soup.select("#dt_conf_date")[0].text))
 
     # Reference
     for item in blockRef:

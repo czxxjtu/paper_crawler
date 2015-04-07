@@ -1,4 +1,4 @@
-# utf-8
+# coding=utf-8
 import os
 import json
 
@@ -12,23 +12,68 @@ dirName = "html"
 dataArray = []
 
 
-# Split Reference Data
 def splitRefData(block):
     blockItem = block.select("p")
-    referenceObject = {}
-    referenceObject['author'] = []
-    if blockItem.__len__() == 3:
+    print blockItem
+    if blockItem.__len__() == 0:
+        print "Null"
+    elif blockItem.__len__() == 3:
         for idx, item in enumerate(blockItem):
             if idx == 0:
-                tempArray = [x.strip() for x in item.text.split(', ')]
-                for each in tempArray:
-                    print each
-                    referenceObject['author'].append(re.sub("^[0-9]+\.+\s", "", each))
+                tempString = ""
             elif idx == 1:
-                referenceObject['title'] = item.text
+                tempString = tempString + item.text + ", "
             elif idx == 2:
-                referenceObject['journal'] = item.text
-    dataObject['references'].append(referenceObject)
+                tempString = tempString + item.text
+    elif blockItem.__len__() == 1:
+        for item in blockItem:
+            tempString = re.sub("[0-9]+\. ", "", item.text)
+    elif blockItem.__len__() == 2:
+        for idx, item in enumerate(blockItem):
+            if idx == 0:
+                tempString = re.sub("[0-9]+\. ", "", item.text) + ", "
+            elif idx == 1:
+                tempString = tempString + item.text
+
+    tempArray = []
+    _tempArray = re.split(';|,|\.', tempString)
+    for item in _tempArray:
+        tempArray.append(item.lstrip())
+    outArray = [{
+        "string": "",
+        "length": 0
+    }, {
+        "string": "",
+        "length": 0
+    }]
+    isLeft = True
+
+    for item in tempArray:
+        if item == outArray[0].get("string") or item == outArray[1].get("string"):
+            print item + " / " + outArray[0].get("string") + " / " + outArray[1].get("string")
+            continue
+        if isLeft:
+            if item.__len__() > outArray[0].get("length"):
+                outArray.pop(0)
+                outArray.append({
+                    "string": item,
+                    "length": item.__len__()
+                })
+        elif not isLeft:
+            if item.__len__() > outArray[1].get("length"):
+                outArray.pop(1)
+                outArray.append({
+                    "string": item,
+                    "length": item.__len__()
+                })
+        if outArray[0].get("length") < outArray[1].get("length"):
+            isLeft = True
+        elif outArray[0].get("length") > outArray[1].get("length"):
+            isLeft = False
+
+        outString = outArray[0].get("string")
+
+    dataObject['references'].append(outString)
 
 
 def splitAuthorData(block):

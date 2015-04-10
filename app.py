@@ -36,7 +36,7 @@ def splitRefData(block):
                 tempString = tempString + item.text
 
     tempArray = []
-    _tempArray = re.split(';|,|\.', tempString)
+    _tempArray = re.split(',|\.', tempString)
     for item in _tempArray:
         tempArray.append(item.lstrip())
     outArray = [{
@@ -85,22 +85,33 @@ def splitAuthorData(block):
 
 
 for f in os.listdir(dirName):
+    dataObject = {}
+
     # Load HTML file
     rawHtml = file(dirName + "/" + f, 'rb')
+    print "==========================" + rawHtml.name
+    dataObject['file'] = rawHtml.name
     soup = BeautifulSoup(rawHtml)
     rawHtml.close()
 
-    dataObject = {}
+
 
     blockRef = soup.select("#references div.body")
-    paperName = soup.select("#at-glance div.text h1")[0].text.replace(":", "").replace(",", "")
+    paperName = soup.select("#at-glance div.text h1")[0].text.replace(",", "")#.replace(":", "")
 
     # title
     dataObject['title'] = paperName
     dataObject['references'] = []
 
     # date
-    dataObject['date'] = re.sub("^\n", "", re.sub("\n$", "", soup.select("#dt_conf_date")[0].text))
+    if soup.select("#dt_conf_date"):
+        dataObject['date'] = re.sub("^\n", "", re.sub("\n$", "", soup.select("#dt_conf_date")[0].text))
+    elif soup.select("#dt_dop"):
+        dataObject['date'] = re.sub("^\n", "", re.sub("\n$", "", soup.select("#dt_dop")[0].text))
+    elif soup.select("#dt_date"):
+        dataObject['date'] = re.sub("^\n", "", re.sub("\n$", "", soup.select("#dt_date")[0].text))
+    else:
+        dataObject['date'] = "none"
 
     # Reference
     for item in blockRef:

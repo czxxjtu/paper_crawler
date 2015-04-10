@@ -2,53 +2,92 @@ var fs = require('fs');
 var array = fs.read('input.txt').toString().split("\n");
 
 var links;
+var noHTMLQuery = "";
 var casper = require('casper').create({
-    // verbose: true,
-    // logLevel: 'debug'
+    verbose: true,
+    logLevel: 'error'
 });
+var hasResult;
+var hasHTML;
+
 
 casper.start('http://ieeexplore.ieee.org/Xplore/home.jsp', function() {
-    // search for 'casperjs' from google form
     console.log("===== in - start =====");
 });
 
 function doEach(query, inde) {
     
     casper.thenOpen('http://ieeexplore.ieee.org/Xplore/home.jsp', function() {
-        // search for 'casperjs' from google form
         console.log("[ " + inde.toString() + ": " + query + " ]")
         console.log("===== in - start =====");
+        hasResult = true;
+        hasHTML = true;
     });
 
-    casper.wait(3000, function() {
+    casper.waitUntilVisible("#search_form button", function() {
         console.log("===== in - then - 1 =====");
-        this.capture("capture/" + inde.toString() + "_1.png");
         this.fill('form[action="/search/searchresult.jsp"]', { queryText: query, newsearch: 'true' }, false);
         this.click('button.js-search.Search-submit.Button.btn-search');
     });
 
-    casper.wait(10000, function() {
-        // aggregate results for the 'casperjs' search
+    casper.waitUntilVisible("#search_results_form", function() {
         console.log("===== in - then - 2 =====");
-        this.capture("capture/" + inde.toString() + "_2.png");
-        // this.capture("capture.png");
-        this.click('div.detail h3 a');
-    });
+        if (this.exists("div.page-tools")) {
+            // exist search result
+            this.capture("capture/" + inde.toString() + "_1.png");
+            this.thenClick('div.detail h3 a', function() {
+                casper.wait(3000, function() {
+                    console.log("===== in - then - 3 =====");
+                    if (this.exists("#full-text-html")){
+                        // exist html paper
+                        this.capture("capture/" + inde.toString() + "_2.png");
+                        this.thenClick('a#full-text-html', function() {
+                            casper.wait(3000, function() {
+                                console.log("===== in - then - 4 =====");
+                                if (hasHTML) {
+                                    this.capture("capture/" + inde.toString() + "_3.png");
+                                    var fs = require('fs');
+                                    fs.write("html/" + inde.toString() + ".html", this.getHTML(), 'w');
+                                    this.captureSelector("img/" + inde.toString() + ".png", "div.img-wrap");
+                                    // links = links.concat(this.evaluate(getLinks));    
+                                } 
+                            });
+                        });
+                    } else {
+                        console.log("===== No HTML =====");
+                        noHTMLQuery = noHTMLQuery + query + "\r\n";
+                        hasHTML = false;
+                    }
+                });
+            }, 10000);
+        } else {
+            console.log("===== No Result =====");
+            hasResult = false;
+        }
+    }, 10000);
 
-    casper.wait(3000, function() {
-        console.log("===== in - then - 3 =====");
-        this.capture("capture/" + inde.toString() + "_3.png");
-        this.click('a#full-text-html');
-    });
+    // casper.wait(3000, function() {
+    //     console.log("===== in - then - 3 =====");
+    //     if (this.exists("#full-text-html")){
+    //         this.capture("capture/" + inde.toString() + "_2.png");
+    //         this.click('a#full-text-html');
+    //     } else {
+    //         console.log("===== No HTML =====");
+    //         noHTMLQuery = noHTMLQuery + query + "\r\n";
+    //         hasHTML = false;
+    //     }
+    // });
 
-    casper.wait(3000, function() {
-        console.log("===== in - then - 4 =====");
-        this.capture("capture/" + inde.toString() + "_4.png");
-        var fs = require('fs');
-        fs.write("html/" + inde.toString() + ".html", this.getHTML(), 'w');
-        // links = links.concat(this.evaluate(getLinks));
-    });
-
+    // casper.wait(3000, function() {
+    //     console.log("===== in - then - 4 =====");
+    //     if (hasHTML) {
+    //         this.capture("capture/" + inde.toString() + "_3.png");
+    //         var fs = require('fs');
+    //         fs.write("html/" + inde.toString() + ".html", this.getHTML(), 'w');
+    //         this.captureSelector("img/" + inde.toString() + ".png", "div.img-wrap");
+    //         // links = links.concat(this.evaluate(getLinks));    
+    //     } 
+    // });
     
 }
 
@@ -57,7 +96,13 @@ for(i in array) {
     doEach(array[i], i);
 }
 
+function makeNoHTMLText() {
+    var fs = require('fs');
+    fs.write("output/no_html_list.txt", noHTMLQuery, 'w');
+}
+
 casper.run(function() {
     console.log("===== in - run =====");
+    makeNoHTMLText()
     this.exit();
 });

@@ -49,7 +49,6 @@ function doEach(query, inde) {
                                     var fs = require('fs');
                                     fs.write("html/" + inde.toString() + ".html", this.getHTML(), 'w');
                                     this.captureSelector("img/" + inde.toString() + ".png", "div.img-wrap");
-                                    // links = links.concat(this.evaluate(getLinks));    
                                 } 
                             });
                         });
@@ -59,36 +58,12 @@ function doEach(query, inde) {
                         hasHTML = false;
                     }
                 });
-            }, 10000);
+            }, 20000);
         } else {
             console.log("===== No Result =====");
             hasResult = false;
         }
-    }, 10000);
-
-    // casper.wait(3000, function() {
-    //     console.log("===== in - then - 3 =====");
-    //     if (this.exists("#full-text-html")){
-    //         this.capture("capture/" + inde.toString() + "_2.png");
-    //         this.click('a#full-text-html');
-    //     } else {
-    //         console.log("===== No HTML =====");
-    //         noHTMLQuery = noHTMLQuery + query + "\r\n";
-    //         hasHTML = false;
-    //     }
-    // });
-
-    // casper.wait(3000, function() {
-    //     console.log("===== in - then - 4 =====");
-    //     if (hasHTML) {
-    //         this.capture("capture/" + inde.toString() + "_3.png");
-    //         var fs = require('fs');
-    //         fs.write("html/" + inde.toString() + ".html", this.getHTML(), 'w');
-    //         this.captureSelector("img/" + inde.toString() + ".png", "div.img-wrap");
-    //         // links = links.concat(this.evaluate(getLinks));    
-    //     } 
-    // });
-    
+    }, 20000);    
 }
 
 for(i in array) {
